@@ -1,0 +1,9 @@
+flowchart TD
+    C[API client / test scripts] -->|REST HTTP| A[Appointment Service :8081]
+    A -->|REST: validate patient| P[Patient Service :8082]
+    A -->|REST: reserve or release slot| V[Doctor & Availability Service :8083]
+    A -->|REST: mock notification| N[Notification Service :8084]
+    A --- DA[(appointments.db)]
+    P --- DP[(patients.db)]
+    V --- DV[(availability.db)]
+    N --- DN[(notifications.db)]

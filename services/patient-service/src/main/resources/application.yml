@@ -1,0 +1,5 @@
+server:
+  port: ${SERVER_PORT:8082}
+spring:
+  application:
+    name: patient-service

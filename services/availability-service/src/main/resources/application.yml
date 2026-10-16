@@ -1,0 +1,5 @@
+server:
+  port: ${SERVER_PORT:8083}
+spring:
+  application:
+    name: availability-service

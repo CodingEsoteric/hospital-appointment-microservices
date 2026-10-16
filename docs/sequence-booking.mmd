@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    participant Client
+    participant Appointment
+    participant Patient
+    participant Availability
+    participant Notification
+    Client->>Appointment: POST appointment + Idempotency-Key
+    Appointment->>Appointment: Claim key + fingerprint atomically
+    Appointment->>Patient: GET patient
+    Patient-->>Appointment: Patient status
+    Appointment->>Availability: POST reserve slot
+    Availability->>Availability: Atomic capacity-checked DB update
+    Availability-->>Appointment: Reservation result
+    Appointment->>Appointment: Persist appointment and replay response
+    Appointment->>Notification: POST mock notification (timeout + bounded retries)
+    alt Notification succeeds
+        Notification-->>Appointment: SENT
+    else Notification unavailable
+        Notification-->>Appointment: Failure/timeout
+        Appointment->>Appointment: Keep confirmed booking; record notification failure
+    end
+    Appointment-->>Client: Booking result
