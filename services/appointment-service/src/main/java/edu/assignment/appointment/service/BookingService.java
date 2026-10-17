@@ -40,7 +40,8 @@ public class BookingService {
                 }
                 throw new PersistenceFailureException(e);
             }
-            saved.setNotificationStatus(clients.notifyBooking(saved.getId(), request.patientId(), request.slotId()).name());
+            saved.setNotificationStatus(clients.notifyBooking(saved.getId(), saved.getPatientId(), saved.getSlotId(),
+                    saved.getReservationId(), saved.getCreatedAt()).name());
             try { appointments.saveAndFlush(saved); } catch (RuntimeException ignored) {
                 // The first save committed the appointment; retain PENDING as its durable retry state.
                 saved.setNotificationStatus("PENDING");
