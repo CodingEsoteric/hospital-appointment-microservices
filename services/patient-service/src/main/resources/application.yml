@@ -3,3 +3,11 @@ server:
 spring:
   application:
     name: patient-service
+  datasource:
+    url: ${PATIENT_DATABASE_URL:jdbc:sqlite:./patient-service.db}
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false

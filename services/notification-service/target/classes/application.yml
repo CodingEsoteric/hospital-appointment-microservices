@@ -1,0 +1,5 @@
+server:
+  port: ${SERVER_PORT:8084}
+spring:
+  application:
+    name: notification-service
