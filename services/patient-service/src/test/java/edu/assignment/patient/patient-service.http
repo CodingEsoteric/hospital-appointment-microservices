@@ -1,0 +1,21 @@
+
+### Create a patient
+POST http://localhost:8082/api/patients
+Content-Type: application/json
+
+{
+  "name": "Test Patient",
+  "email": "patient@example.com",
+  "active": true
+}
+
+
+### Retrieve the patient
+GET http://localhost:8082/api/patients/1
+
+###eligibility
+GET http://localhost:8082/api/patients/1/eligibility
+
+###missing
+GET http://localhost:8082/api/patients/99999
+
