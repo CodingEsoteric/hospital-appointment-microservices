@@ -1,5 +1,6 @@
 package edu.assignment.appointment.service;
 
+import java.time.Instant;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -25,10 +26,11 @@ public class DownstreamClients {
     public void release(String reservationId) {
         availability.post().uri("/api/v1/reservations/{id}/release",reservationId).retrieve().toBodilessEntity();
     }
-    public NotificationOutcome notifyBooking(long appointmentId, long patientId, long slotId) {
+    public NotificationOutcome notifyBooking(long appointmentId, long patientId, long slotId, String reservationId, Instant createdAt) {
         if (notificationPath == null || notificationPath.isBlank()) return NotificationOutcome.UNCONFIGURED;
         try {
-            notification.post().uri(notificationPath).body(Map.of("appointmentId",appointmentId,"patientId",patientId,"slotId",slotId)).retrieve().toBodilessEntity();
+            notification.post().uri(notificationPath).body(Map.of("appointmentId",appointmentId,"patientId",patientId,"slotId",slotId,
+                    "reservationId",reservationId,"createdAt",createdAt)).retrieve().toBodilessEntity();
             return NotificationOutcome.SENT;
         } catch (RuntimeException ignored) { return NotificationOutcome.FAILED; }
     }

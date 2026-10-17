@@ -16,4 +16,4 @@ appointment:
     patient-url: ${PATIENT_SERVICE_URL:http://localhost:8082}
     availability-url: ${AVAILABILITY_SERVICE_URL:http://localhost:8083}
     notification-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
-    notification-path: ${NOTIFICATION_SEND_PATH:}
+    notification-path: ${NOTIFICATION_SEND_PATH:/api/notifications}
