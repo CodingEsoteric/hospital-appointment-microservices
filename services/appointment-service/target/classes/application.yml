@@ -3,3 +3,17 @@ server:
 spring:
   application:
     name: appointment-service
+  datasource:
+    url: ${APPOINTMENT_DATABASE_URL:jdbc:sqlite:./appointment-service.db}
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+appointment:
+  clients:
+    patient-url: ${PATIENT_SERVICE_URL:http://localhost:8082}
+    availability-url: ${AVAILABILITY_SERVICE_URL:http://localhost:8083}
+    notification-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
+    notification-path: ${NOTIFICATION_SEND_PATH:}
