@@ -176,18 +176,6 @@ class AppointmentHttpIntegrationTests {
     }
 
     @Test
-    void configuredNotificationFailureDoesNotFailBooking() {
-        notificationUnavailable.set(true);
-        ResponseEntity<JsonNode> response = postWithNotification("notification-fail", 1, 2);
-        assertThat(response.getStatusCode().value()).isEqualTo(201);
-        assertThat(response.getBody().path("notificationStatus").asText()).isEqualTo("FAILED");
-        assertThat(response.getBody().path("notificationAttempts").asInt()).isEqualTo(3);
-        assertThat(appointments.count()).isEqualTo(1);
-        assertThat(reservationRequests.get()).isEqualTo(1);
-        assertThat(notificationRequests.get()).isEqualTo(3);
-    }
-
-    @Test
     void transientNotificationFailureRetriesThenSucceeds() {
         transientNotificationFailures.set(1);
 
@@ -235,6 +223,18 @@ class AppointmentHttpIntegrationTests {
         assertThat(replay.getBody().path("notificationAttempts").asInt()).isEqualTo(3);
         assertThat(notificationRequests.get()).isEqualTo(3);
         assertThat(reservationRequests.get()).isEqualTo(1);
+    }
+
+    @Test
+    void configuredNotificationFailureDoesNotFailBooking() {
+        notificationUnavailable.set(true);
+        ResponseEntity<JsonNode> response = postWithNotification("notification-fail", 1, 2);
+        assertThat(response.getStatusCode().value()).isEqualTo(201);
+        assertThat(response.getBody().path("notificationStatus").asText()).isEqualTo("FAILED");
+        assertThat(response.getBody().path("notificationAttempts").asInt()).isEqualTo(3);
+        assertThat(appointments.count()).isEqualTo(1);
+        assertThat(reservationRequests.get()).isEqualTo(1);
+        assertThat(notificationRequests.get()).isEqualTo(3);
     }
 
     @Test
