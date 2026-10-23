@@ -22,7 +22,7 @@ Content-Type: application/json
 }
 
 ### get eligibility
-GET http://localhost:8082/api/patients/2/eligibility
+GET http://localhost:8082/api/patients/1/eligibility
 
 
 ### Create a doctor
@@ -57,4 +57,23 @@ Idempotency-Key: e2e-booking-001
   "slotId": 2
 }
 
+### Replay the same booking — same key and same body
+POST http://localhost:8081/api/appointments
+Content-Type: application/json
+Idempotency-Key: demo-booking-replay-001
+
+{
+  "patientId": 1,
+  "slotId": 2
+}
+
+### Reuse the same key with a different body — expect a conflict
+POST http://localhost:8081/api/appointments
+Content-Type: application/json
+Idempotency-Key: demo-booking-replay-001
+
+{
+  "patientId": 2,
+  "slotId": 2
+}
 
