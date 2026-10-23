@@ -1,0 +1,60 @@
+
+### 1. Patient Service
+GET http://localhost:8082/health
+
+### 2. Availability Service
+GET http://localhost:8083/health
+
+### 3. Notification Service
+GET http://localhost:8084/health
+
+### 4. Appointment Service
+GET http://localhost:8081/health
+
+
+### Create a patient
+POST http://localhost:8082/api/patients
+Content-Type: application/json
+
+{
+  "name": "E2E Test Patient",
+  "email": "e2e.patient@example.com"
+}
+
+### get eligibility
+GET http://localhost:8082/api/patients/2/eligibility
+
+
+### Create a doctor
+POST http://localhost:8083/api/v1/doctors
+Content-Type: application/json
+
+{
+  "name": "Dr. E2E Test",
+  "specialty": "General Medicine"
+}
+
+
+### Create an appointment slot
+POST http://localhost:8083/api/v1/slots
+Content-Type: application/json
+
+{
+  "doctorId": 1,
+  "startsAt": "2027-01-15T09:00:00Z",
+  "endsAt": "2027-01-15T09:30:00Z",
+  "capacity": 1
+}
+
+
+### Book an appointment
+POST http://localhost:8081/api/appointments
+Content-Type: application/json
+Idempotency-Key: e2e-booking-001
+
+{
+  "patientId": 1,
+  "slotId": 2
+}
+
+
