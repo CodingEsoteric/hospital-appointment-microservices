@@ -23,7 +23,7 @@ public class NotificationController {
 
     public NotificationController(NotificationService notifications) { this.notifications = notifications; }
 
-    /** Accepts a simulated appointment notification. Acceptance records an in-memory event only. */
+    /** Accepts a simulated appointment notification and records its event in Notification Service storage. */
     @PostMapping
     public ResponseEntity<NotificationResponse> send(@Valid @RequestBody NotificationRequest request) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(notifications.accept(request));

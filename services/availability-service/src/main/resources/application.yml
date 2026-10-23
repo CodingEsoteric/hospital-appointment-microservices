@@ -6,6 +6,8 @@ spring:
   datasource:
     url: ${AVAILABILITY_DATABASE_URL:jdbc:sqlite:./availability-service.db}
     driver-class-name: org.sqlite.JDBC
+    hikari:
+      connection-init-sql: "PRAGMA busy_timeout=5000"
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:

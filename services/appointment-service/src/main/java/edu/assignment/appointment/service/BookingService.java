@@ -14,11 +14,12 @@ public class BookingService {
         this.appointments=appointments; this.clients=clients; for(int i=0;i<locks.length;i++) locks[i]=new Object();
     }
     public Result book(String key, BookingRequest request) {
+        String requestFingerprint = BookingRequestFingerprint.of(request);
         synchronized (locks[(key.hashCode() & 0x7fffffff) % locks.length]) {
             var prior=appointments.findByIdempotencyKey(key);
             if(prior.isPresent()) {
                 Appointment a=prior.get();
-                if(!a.getPatientId().equals(request.patientId()) || !a.getSlotId().equals(request.slotId())) throw new KeyReuseException();
+                if(!samePayload(a, request, requestFingerprint)) throw new KeyReuseException();
                 return new Result(a,false);
             }
             DownstreamClients.Eligibility eligibility=clients.checkPatient(request.patientId());
@@ -27,21 +28,24 @@ public class BookingService {
             if(reservation==null || reservation.reservationId()==null) throw new IllegalStateException("Availability returned an invalid reservation");
             Appointment saved;
             try {
-                saved=appointments.saveAndFlush(new Appointment(request.patientId(),request.slotId(),reservation.reservationId(),key,"PENDING"));
+                saved=appointments.saveAndFlush(new Appointment(request.patientId(),request.slotId(),reservation.reservationId(),
+                        key,requestFingerprint,"PENDING"));
             } catch (RuntimeException e) {
                 compensate(reservation.reservationId(), e);
                 if (isIdempotencyConflict(e)) {
                     var raced=appointments.findByIdempotencyKey(key);
                     if (raced.isPresent()) {
                         Appointment existing=raced.get();
-                        if (!samePayload(existing, request)) throw new KeyReuseException();
+                        if (!samePayload(existing, request, requestFingerprint)) throw new KeyReuseException();
                         return new Result(existing,false);
                     }
                 }
                 throw new PersistenceFailureException(e);
             }
-            saved.setNotificationStatus(clients.notifyBooking(saved.getId(), saved.getPatientId(), saved.getSlotId(),
-                    saved.getReservationId(), saved.getCreatedAt()).name());
+            DownstreamClients.NotificationResult notificationResult=clients.notifyBooking(saved.getId(), saved.getPatientId(), saved.getSlotId(),
+                    saved.getReservationId(), saved.getCreatedAt());
+            saved.setNotificationStatus(notificationResult.status().name());
+            saved.setNotificationAttempts(notificationResult.attempts());
             try { appointments.saveAndFlush(saved); } catch (RuntimeException ignored) {
                 // The first save committed the appointment; retain PENDING as its durable retry state.
                 saved.setNotificationStatus("PENDING");
@@ -49,7 +53,9 @@ public class BookingService {
             return new Result(saved,true);
         }
     }
-    private static boolean samePayload(Appointment a, BookingRequest request) {
+    private static boolean samePayload(Appointment a, BookingRequest request, String requestFingerprint) {
+        if (a.getRequestFingerprint() != null) return a.getRequestFingerprint().equals(requestFingerprint);
+        // Rows created before request_fingerprint was added remain replayable from their persisted request fields.
         return a.getPatientId().equals(request.patientId()) && a.getSlotId().equals(request.slotId());
     }
     private static boolean isIdempotencyConflict(Throwable error) {

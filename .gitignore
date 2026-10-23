@@ -5,3 +5,32 @@
 # Java and Maven build output
 *.class
 **/target/
+**/build/
+**/out/
+
+# Runtime logs and JVM crash reports
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# Local SQLite service databases and sidecar/journal files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+
+# Local-only secrets and configuration
+.env
+.env.*
+!.env.example
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+*.local.yml
+*.local.yaml
+*.local.properties

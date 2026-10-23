@@ -3,3 +3,13 @@ server:
 spring:
   application:
     name: notification-service
+  datasource:
+    url: ${NOTIFICATION_DATABASE_URL:jdbc:sqlite:./notification-service.db}
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      connection-init-sql: "PRAGMA busy_timeout=5000"
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false

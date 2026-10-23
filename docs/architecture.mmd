@@ -1,9 +1,11 @@
-flowchart TD
-    C[API client / test scripts] -->|REST HTTP| A[Appointment Service :8081]
-    A -->|REST: validate patient| P[Patient Service :8082]
-    A -->|REST: reserve or release slot| V[Doctor & Availability Service :8083]
-    A -->|REST: mock notification| N[Notification Service :8084]
-    A --- DA[(appointments.db)]
-    P --- DP[(patients.db)]
-    V --- DV[(availability.db)]
-    N --- DN[(notifications.db)]
+flowchart LR
+    C[API client / integration tests] -->|REST| A[Appointment Service :8081]
+    A -->|GET eligibility| P[Patient Service :8082]
+    A -->|POST reserve / release| V[Availability Service :8083]
+    A -->|POST /api/notifications| N[Notification Service :8084]
+    A --- DA[(appointment-service.db)]
+    P --- DP[(patient-service.db)]
+    V --- DV[(availability-service.db)]
+    N --- DN[(notification-service.db)]
+    classDef store fill:#f4f4f4,stroke:#555;
+    class DA,DP,DV,DN store;

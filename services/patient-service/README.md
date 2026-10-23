@@ -1,8 +1,8 @@
 # Patient Service
 
-Spring Boot 3.4 / Java 21 service with its own SQLite database. The default database is `patient-service.db` in the process working directory. Set `PATIENT_DATABASE_URL` to use another SQLite JDBC URL. No database server is required.
+Spring Boot 3.4.5 / Java 21 service, default port 8082. It owns the patient records and SQLite database. Appointment Service reads eligibility through this service's REST API; it does not access the Patient database.
 
-## Run
+## Start
 
 From the repository root:
 
@@ -10,43 +10,29 @@ From the repository root:
 mvn -pl services/patient-service spring-boot:run
 ```
 
-The service listens on port 8082 by default. Override it with `SERVER_PORT`.
+`GET /health` returns service health. Swagger UI and OpenAPI are at `/swagger-ui/index.html` and `/v3/api-docs`.
 
-## API
+## Implemented API
 
-Create a patient (the `active` field defaults to `true`):
+- `POST /api/patients` creates a patient from `{ "name": string, "email": string, "active": boolean? }`. Name must be nonblank and at most 120 characters; email must be valid and at most 254 characters. `active` defaults to true. Returns `201 Created`, a `Location` header, and `{ id: Long, name, email, active }`.
+- `GET /api/patients/{id}` reads a patient by numeric ID.
+- `GET /api/patients/{id}/eligibility` returns `{ patientId, exists, active, eligible }`. Missing patient is `404`; inactive patients exist but are not eligible.
 
-```bash
-curl -i -X POST http://localhost:8082/api/patients \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Ada Lovelace","email":"ada@example.com"}'
-```
+Invalid patient input returns `400` with `{ "error": "Invalid patient input" }`; malformed input returns `400` with `{ "error": "Invalid request" }`. A missing patient returns `404` with `{ "error": "Patient not found" }`. See the root [API contracts](../../docs/api-contracts.md) for all service contracts.
 
-Creation returns `201 Created` with the patient and a `Location` header. `name` must be nonblank and at most 120 characters; `email` must be a valid email address and at most 254 characters. An optional `active` boolean sets the patient's status.
+## Configuration and database
 
-Retrieve a patient:
+| Environment variable | Default |
+|---|---|
+| `SERVER_PORT` | `8082` |
+| `PATIENT_DATABASE_URL` | `jdbc:sqlite:./patient-service.db` |
 
-```bash
-curl http://localhost:8082/api/patients/1
-```
+Hibernate `ddl-auto:update` creates/updates the Patient-owned schema at startup. The SQLite file path is relative to the process working directory. Set `PATIENT_DATABASE_URL` to select another file. Patient tests use an in-memory SQLite database with `create-drop`; they do not use the development file.
 
-Check eligibility (a missing patient returns `404`; an inactive patient returns `eligible: false`):
-
-```bash
-curl http://localhost:8082/api/patients/1/eligibility
-```
-
-The eligibility response includes `patientId`, `exists`, `active`, and `eligible`. Invalid request bodies return `400`; missing patients return `404`. API errors contain a short message and no internal exception details.
-
-Health check remains available at `GET http://localhost:8082/health`.
-
-## Test
-
-From the repository root:
+## Tests
 
 ```powershell
 mvn -pl services/patient-service test
-mvn -pl services/patient-service package
 ```
 
-Tests use a named in-memory SQLite database and do not read or modify the development database file.
+The tests cover creation/retrieval, missing IDs, input validation, and inactive-patient eligibility.

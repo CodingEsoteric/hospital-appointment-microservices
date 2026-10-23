@@ -1,23 +1,39 @@
 sequenceDiagram
     autonumber
     participant Client
-    participant Appointment
-    participant Patient
-    participant Availability
-    participant Notification
-    Client->>Appointment: POST appointment + Idempotency-Key
-    Appointment->>Appointment: Claim key + fingerprint atomically
-    Appointment->>Patient: GET patient
-    Patient-->>Appointment: Patient status
-    Appointment->>Availability: POST reserve slot
-    Availability->>Availability: Atomic capacity-checked DB update
-    Availability-->>Appointment: Reservation result
-    Appointment->>Appointment: Persist appointment and replay response
-    Appointment->>Notification: POST mock notification (timeout + bounded retries)
-    alt Notification succeeds
-        Notification-->>Appointment: SENT
-    else Notification unavailable
-        Notification-->>Appointment: Failure/timeout
-        Appointment->>Appointment: Keep confirmed booking; record notification failure
+    participant Appointment as Appointment Service
+    participant Patient as Patient Service
+    participant Availability as Availability Service
+    participant Notification as Notification Service
+
+    Client->>Appointment: POST /api/appointments + Idempotency-Key
+    alt Existing key and matching fingerprint
+        Appointment->>Appointment: Load persisted appointment
+        Appointment-->>Client: 200 OK with replayed booking response
+    else Existing key and different fingerprint
+        Appointment-->>Client: 409 Conflict
+    else New key
+        Appointment->>Patient: GET /api/patients/{id}/eligibility
+        Patient-->>Appointment: Eligibility result
+        Appointment->>Availability: POST /api/v1/slots/{id}/reservations
+        Availability->>Availability: Conditional capacity update and reservation insert
+        Availability-->>Appointment: Reservation ID
+        Appointment->>Appointment: Persist appointment and unique idempotency key
+        alt Appointment persistence fails
+            Appointment->>Availability: POST /api/v1/reservations/{id}/release
+            Availability-->>Appointment: Reservation release result
+            Appointment-->>Client: Error response
+        else Appointment persisted
+            loop Bounded transient retries
+                Appointment->>Notification: POST /api/notifications
+                alt Event accepted or duplicate replayed
+                    Notification->>Notification: Persist or load unique appointment event
+                    Notification-->>Appointment: 202 ACCEPTED response
+                else Transient failure or timeout
+                    Notification-->>Appointment: Failure / no response
+                end
+            end
+            Appointment->>Appointment: Store notification status and attempt count
+            Appointment-->>Client: 201 Created with booking and notification status
+        end
     end
-    Appointment-->>Client: Booking result

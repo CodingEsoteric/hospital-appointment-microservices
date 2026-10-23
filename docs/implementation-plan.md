@@ -1,54 +1,21 @@
-# Implementation Plan (Java / Spring Boot)
+# Implementation Status and Remaining Work
 
-## Build order
-1. Generate the four Spring Boot applications (Java 21, Maven) in their respective `services/*` folders.
-2. Ensure each service starts independently on its assigned port and has `GET /health`.
-3. Implement Patient Service and seed fictional patient data.
-4. Implement Availability Service and atomic reservation/release operations.
-5. Implement Appointment Service, idempotency storage and state transitions.
-6. Implement Notification Service with test-configurable delay/failure.
-7. Add end-to-end and challenge scripts, tests, evidence, report and demo.
+This document replaces the original starter checklist. The four Spring Boot services and their current tests exist in the repository; it is not a list of missing scaffolding.
 
-## Suggested package structure per service
-```text
-src/
-  main/
-    java/edu/assignment/<service>/
-      <Service>Application.java
-      controller/
-      service/
-      repository/
-      model/
-      dto/
-      exception/
-      config/
-    resources/
-      application.yml
-  test/
-    java/edu/assignment/<service>/
-```
+## Implemented
 
-Keep controllers thin. Put business rules in service classes and database operations in repositories. Use DTOs for API contracts rather than exposing JPA entities directly.
+- Patient Service on port 8082 owns patient records and exposes create, read, eligibility, and health routes.
+- Availability Service on port 8083 owns doctors, slots, and reservations; a conditional database update enforces capacity, and release is idempotent.
+- Appointment Service on port 8081 calls Patient, Availability, and Notification over REST; it persists appointments, a unique idempotency key and request fingerprint; it compensates a reservation after persistence failure; notification retries are bounded with finite timeouts.
+- Notification Service on port 8084 stores simulated event acceptance in its own SQLite database with a unique appointment key.
+- Every service has a health endpoint, Springdoc documentation and service-owned SQLite configuration. Tests use isolated databases; see service READMEs and evidence notes.
 
-## Dependencies
-Common Spring dependencies:
-- Spring Web
-- Spring Data JPA
-- Validation
-- Spring Boot Test
+## Known limitations / possible follow-up
 
-Also add:
-- SQLite JDBC driver and a Hibernate-compatible SQLite dialect (verify version compatibility)
-- Springdoc OpenAPI starter for Swagger UI
-- HTTP client support (Spring `RestClient` is available in modern Spring Framework versions)
+- Appointment has no retrieve, cancel, or lifecycle/state-transition API or status field. Implementing one requires a separate API/data-model change and lifecycle tests.
+- Notification Service simulates acceptance and does not deliver externally. A response lost after acceptance can cause a retry; database deduplication prevents duplicate local event rows but is not exactly-once external delivery.
+- REST calls and SQLite files do not participate in a distributed transaction. Crash windows may require reconciliation or a future outbox/workflow design.
+- SQLite is suitable for this local assignment, not a multi-host shared production database. Busy timeout and database constraints do not remove that deployment limitation.
+- Verify required report diagrams, contribution/reflection sections, AI-use declaration, screenshots/scripts, and demo video against the assignment submission rubric. See [report outline](report-outline.md).
 
-Avoid adding a message broker, API gateway, frontend, authentication or a real email/SMS integration for this assignment.
-
-## SQLite concurrency note
-Use a database-level atomic conditional update inside a transaction and assert the affected row count. A Java `synchronized` block is not sufficient across separate application instances. Configure a sensible SQLite busy timeout and handle lock/busy errors. Run the required 20+ request script repeatedly.
-
-## Idempotency note
-Store `Idempotency-Key`, request fingerprint, operation state and final response in Appointment Service's database. Use a unique key and transaction. Concurrent duplicates must not create multiple appointments. If a request with the same key is already in progress, wait for its stored result or return a documented retryable response; do not create a second effect.
-
-## Failure handling
-Use finite HTTP timeouts and bounded retries with exponential backoff and jitter for notification delivery. Do not retry booking creation blindly without idempotency. If availability reservation succeeds but appointment persistence fails, attempt compensation using a release API and log the outcome. State the crash-window limitation in the report.
+Use [API contracts](api-contracts.md), [data ownership](data-ownership.md), and [business rules](business-rules.md) as the current implementation reference.

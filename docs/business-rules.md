@@ -1,19 +1,20 @@
-# Business Rules and Traceability
+# Implemented Business Rules and Traceability
 
-| ID | Rule | Owning service | Test/evidence |
+This table records behavior present in the current code. The appointment lifecycle/cancellation rule from the original scaffold is not implemented: there is no appointment status field or cancellation endpoint. Notification status is not an appointment lifecycle state.
+
+| ID | Implemented rule | Owning code | Existing test/evidence |
 |---|---|---|---|
-| BR1 | Only a known, active patient may book. | Patient + Appointment | Unknown/inactive patient rejected; no reservation left behind. |
-| BR2 | A slot never exceeds capacity. | Availability | 20+ parallel requests; exactly N reservations succeed for capacity N. |
-| BR3 | Same idempotency key + same payload returns original result with one effect. | Appointment | Sequential and simultaneous repeat test; one appointment record. |
-| BR4 | Same idempotency key + different payload returns 409 or documented 422. | Appointment | Changed patient/slot request is rejected. |
-| BR5 | Notification failure alone does not cancel a confirmed appointment. | Appointment + Notification | Force notification failure; booking remains confirmed and status is visible. |
-| BR6 | Only allowed appointment state transitions are accepted. | Appointment | Invalid state transition is rejected. |
+| BR1 | A booking requires an existing active/eligible patient. An ineligible patient is rejected before a slot reservation is created. | Appointment `BookingService`; Patient eligibility API | `AppointmentHttpIntegrationTests.ineligiblePatientDoesNotReserveSlot`; patient `inactivePatientIsNotEligible` |
+| BR2 | Reservation increments only while `reserved_count < capacity`; release decrements only while positive and marks a reservation released once. | Availability `SlotRepository.reserveIfAvailable`, `ReservationRepository.markReleasedIfActive`, `AvailabilityController` | `AvailabilityServiceApplicationTests.concurrentReservationsNeverExceedFive`, `reservesUntilCapacityThenRejects`; captured Challenge 1 evidence |
+| BR3 | An idempotency key is unique in the Appointment database. Same key and same canonical request fingerprint returns the stored appointment; a different payload conflicts. Concurrent losers reload and replay the winner after database uniqueness enforcement. | Appointment `Appointment`, `IdempotencyConstraintInitializer`, `BookingRequestFingerprint`, `BookingService` | `AppointmentHttpIntegrationTests.replayReturnsExistingAppointmentWithoutAnotherReservation`, `conflictingKeyReuseReturnsConflictWithoutCreatingAnotherAppointment`, `concurrentIdenticalRequestsCreateOneAppointmentAndOneReservation`; `AppointmentMultiInstanceIdempotencyTests.tenSimultaneousRequestsAcrossTwoInstancesUseDatabaseConstraint`; captured Challenge 2 evidence |
+| BR4 | Notification delivery is attempted only after appointment persistence. Delivery failure is recorded as `FAILED` with its attempt count where the status update persists; it does not remove the booking. A blank notification path reports `UNCONFIGURED`. | Appointment `BookingService`, `DownstreamClients`, `Appointment` | `AppointmentHttpIntegrationTests.configuredNotificationFailureDoesNotFailBooking`, retry and timeout tests; Challenge 3A evidence |
+| BR5 | Notification acceptance is stored in Notification Service and keyed uniquely by appointment ID. Duplicate submissions return the first event, including across service restarts. | Notification `NotificationEvent`, `NotificationConstraintInitializer`, `NotificationService` | `NotificationHttpTests.duplicateAppointmentReturnsOriginalEvent`, `concurrentDuplicateSubmissionsCreateOnePersistedEvent`; `NotificationPersistenceRestartTests.acceptedEventSurvivesApplicationContextRecreation` |
+| BR6 | If an appointment cannot be persisted after a slot reservation, Appointment Service attempts to release the reservation. This is compensating REST behavior, not a distributed ACID transaction. | Appointment `BookingService.compensate`, Availability release API | `AppointmentBookingTests.persistenceFailureCompensatesReservation`, `failedCompensationIsKeptAsSuppressedCause` |
 
-Suggested appointment state transitions:
-`PENDING -> CONFIRMED`
-`PENDING -> REJECTED`
-`CONFIRMED -> CANCELLED`
+## Explicitly unimplemented lifecycle behavior
 
-Keep notification delivery state separate from appointment state, e.g. `PENDING`, `SENT`, `FAILED`.
+Appointment Service currently supports booking creation only. It has no `PENDING -> CONFIRMED`, `PENDING -> REJECTED`, or `CONFIRMED -> CANCELLED` appointment state machine, no appointment cancellation operation, and no appointment retrieval operation. Do not report cancellation or lifecycle-transition rules as implemented or tested. Adding them would require a separately scoped implementation and API change.
 
-Replace test paths with the actual code/test names after implementation. Do not claim rules pass before running their tests.
+## Delivery and transaction limits
+
+Notification Service durably records simulated acceptance but has no external email/SMS provider. If it accepts a request and its HTTP response is lost, Appointment Service may retry; the appointment ID unique key returns the existing event, but this is not exactly-once external delivery. Booking, reservation, and notification databases do not participate in one distributed transaction. A process crash between remote reservation and local persistence, or during a compensation attempt, can require manual reconciliation.

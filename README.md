@@ -1,86 +1,76 @@
-# Hospital Appointment System
+# Hospital Appointment Microservices
 
-A Java 21 / Spring Boot microservices assignment demonstrating REST communication, database-per-service, concurrency control, idempotency, and resilience.
+A Java 21, Spring Boot 3.4.5, Maven application with four independently runnable services. Services communicate through HTTP APIs and own separate SQLite databases. Appointment booking uses Availability Service reservation operations, a database-backed idempotency key, and bounded Notification Service retries. Notifications are simulated records; the system does not deliver email or SMS.
 
-> This repository is a starter scaffold. It contains the project specification and structure, not a completed or tested implementation. Do not claim tests or challenges pass until you have implemented and run them.
+## Services
 
-## Architecture
-Four independently runnable services in one GitHub repository:
-
-| Service | Default port | Own database | Responsibility |
+| Service | Port | Database owner | Main responsibility |
 |---|---:|---|---|
-| Appointment Service | 8081 | `appointments.db` | Booking orchestration, appointment state, idempotency |
-| Patient Service | 8082 | `patients.db` | Patient records and active status |
-| Doctor & Availability Service | 8083 | `availability.db` | Doctors, slots, atomic reservation/release |
-| Notification Service | 8084 | `notifications.db` | Mock delivery attempts and simulated failures |
+| Appointment Service | 8081 | `appointment-service.db` | Booking orchestration, persisted idempotency, notification status |
+| Patient Service | 8082 | `patient-service.db` | Patient records and eligibility |
+| Availability Service | 8083 | `availability-service.db` | Doctors, slots, capacity-safe reservations and release |
+| Notification Service | 8084 | `notification-service.db` | Persisted, deduplicated simulated notification acceptance |
 
-Services communicate only through REST APIs. A service must never read another service's database. Each service will have its own `pom.xml`, Spring Boot entry point, configuration, tests, `/health` endpoint and OpenAPI documentation.
+Each database is local to its owning service. Services exchange IDs and data through REST and do not read one another's SQLite files. The SQLite files are created/updated at startup and are ignored by Git.
 
-## Suggested setup
-- Java 21
-- Spring Boot 3.x (choose one compatible version and use it consistently)
-- Maven
-- Spring Web, Validation, Spring Data JPA, Spring Boot Test
-- SQLite with a compatible JDBC driver and Hibernate dialect; verify compatibility with the selected Spring Boot/Hibernate versions
-- `RestClient` for service-to-service REST calls
-- Springdoc OpenAPI for Swagger UI
+## Prerequisites and build
 
-SQLite is selected to minimise setup. Keep a separate SQLite file and credentials/configuration per service. Do not configure services to share a database file.
+- JDK 21 or later (the Maven compiler release is 21)
+- Maven 3.9 or later
 
-## Repository structure
-```text
-hospital-appointment-system/
-├── README.md
-├── .gitignore
-├── pom.xml
-├── docs/
-├── services/
-│   ├── appointment-service/
-│   ├── patient-service/
-│   ├── availability-service/
-│   └── notification-service/
-├── scripts/
-└── evidence/
+From the repository root:
+
+```powershell
+mvn test
 ```
 
-## Business flow
-1. Client sends `POST /api/v1/appointments` with an `Idempotency-Key`.
-2. Appointment Service claims the key and stores a fingerprint of the request.
-3. It validates the patient through Patient Service.
-4. It asks Availability Service to atomically reserve the slot.
-5. It persists the appointment and the final response for safe replay.
-6. It calls Notification Service using a finite timeout and bounded retries.
-7. Notification failure must be visible but must not duplicate the booking or silently undo a confirmed appointment.
+Run one service's tests with `mvn -pl services/<service-name> test`. Appointment's integration tests use Availability Service as a test dependency, so Maven also builds that module when needed. Tests use temporary or in-memory databases rather than the default development database files.
 
-Document and test the compensation/release path if slot reservation succeeds but appointment persistence fails. This is not a distributed ACID transaction; explain residual crash-window limitations honestly.
+## Start the services
 
-## Business rules
-- BR1: Only a known, active patient can book.
-- BR2: Slot reservation never exceeds slot capacity.
-- BR3: Same idempotency key and same payload returns the original result with one effect, including concurrent repeats.
-- BR4: Same key with a different payload returns `409 Conflict` (or documented `422`).
-- BR5: Notification failure does not by itself cancel a confirmed appointment.
-- BR6: Appointment state transitions follow the documented state machine.
+Open four terminals in the repository root. Start the services Appointment calls first, then start Appointment Service:
 
-Map each implemented rule to code and at least one test.
+```powershell
+mvn -pl services/patient-service spring-boot:run
+mvn -pl services/availability-service spring-boot:run
+mvn -pl services/notification-service spring-boot:run
+mvn -pl services/appointment-service spring-boot:run
+```
 
-## Required challenge evidence
-- Challenge 1 (mandatory): at least 20 parallel requests against a capacity-limited slot; exactly N succeed for capacity N. Include script, raw output, final database state and explanation of why check-then-update fails.
-- Challenge 2 (mandatory): same-key sequential and simultaneous requests produce one effect; changed payload with same key is rejected. Include logs/output and database proof.
-- Challenge 3A (selected): notification timeout/failure, bounded retry with exponential backoff and jitter, graceful failure and proof that retry did not create duplicate appointments.
+Each service can also be started independently. Appointment booking requires Patient and Availability Service. Notification Service can be disabled for booking-status purposes by setting `NOTIFICATION_SEND_PATH` to an empty string; this reports `UNCONFIGURED`.
 
-## Run status
-The service folders are scaffolds. Generate/implement each Spring Boot service before trying to run it. See `docs/implementation-plan.md`.
+Health checks are `GET /health` on each port. Springdoc provides `/swagger-ui/index.html` and `/v3/api-docs` for each service.
 
-## Submission checklist
-- [ ] Four independent services, each with its own database and `GET /health`.
-- [ ] Versioned APIs, validation, consistent JSON error body, OpenAPI docs.
-- [ ] Environment-based configuration, structured logs and propagated `X-Correlation-ID`.
-- [ ] Four or more business rules mapped to tests.
-- [ ] End-to-end booking script.
-- [ ] Concurrency, idempotency and resilience scripts with real output.
-- [ ] Evidence folder contains scripts, raw output, timestamped screenshots and explanation.
-- [ ] Report PDF within 15 pages excluding appendices.
-- [ ] Demo video 8–10 minutes; every member speaks.
-- [ ] Contribution table, individual reflections and AI-use declaration.
-- [ ] Fresh clone tested by following only this README.
+## Configuration
+
+All values and defaults below come from the four `src/main/resources/application.yml` files. `SERVER_PORT` is read by every service. Database URLs are SQLite JDBC URLs; the defaults are relative to the process working directory.
+
+| Variable | Service | Default |
+|---|---|---|
+| `SERVER_PORT` | all | service port shown above |
+| `PATIENT_DATABASE_URL` | Patient | `jdbc:sqlite:./patient-service.db` |
+| `AVAILABILITY_DATABASE_URL` | Availability | `jdbc:sqlite:./availability-service.db` |
+| `APPOINTMENT_DATABASE_URL` | Appointment | `jdbc:sqlite:./appointment-service.db` |
+| `NOTIFICATION_DATABASE_URL` | Notification | `jdbc:sqlite:./notification-service.db` |
+| `PATIENT_SERVICE_URL` | Appointment | `http://localhost:8082` |
+| `AVAILABILITY_SERVICE_URL` | Appointment | `http://localhost:8083` |
+| `NOTIFICATION_SERVICE_URL` | Appointment | `http://localhost:8084` |
+| `NOTIFICATION_SEND_PATH` | Appointment | `/api/notifications` |
+| `DOWNSTREAM_CONNECT_TIMEOUT` | Appointment | `2s` |
+| `DOWNSTREAM_RESPONSE_TIMEOUT` | Appointment | `3s` |
+| `NOTIFICATION_MAX_ATTEMPTS` | Appointment | `3` |
+| `NOTIFICATION_RETRY_INITIAL_DELAY` | Appointment | `100ms` |
+| `NOTIFICATION_RETRY_MAX_DELAY` | Appointment | `2s` |
+| `NOTIFICATION_RETRY_JITTER_CAP` | Appointment | `100ms` |
+
+Appointment, Availability, and Notification configure SQLite's `busy_timeout` to 5000 ms. Hibernate `ddl-auto:update` creates/updates service tables. Appointment, Availability, and Notification also create their required unique indexes at startup. Patient Service relies on Hibernate schema initialization. To isolate a local run, set the relevant database variable to a different SQLite path, for example:
+
+```powershell
+$env:APPOINTMENT_DATABASE_URL='jdbc:sqlite:C:/hospital-data/appointment-dev.db'
+```
+
+See [API contracts](docs/api-contracts.md), [business rules](docs/business-rules.md), and [report outline](docs/report-outline.md). Challenge evidence and reproduction notes are under [`evidence/`](evidence/).
+
+## Current scope and limitations
+
+Appointment Service currently implements booking creation only. There is no appointment retrieval, cancellation endpoint, appointment status field, or cancellation lifecycle/state machine. Notification status (`UNCONFIGURED`, `SENT`, `FAILED`, or persisted `PENDING` when status persistence fails) is separate from appointment lifecycle. Notification events are durable local acceptance records, not external delivery. A lost response can lead to repeated HTTP submission; database deduplication returns the same event but does not provide exactly-once email/SMS delivery. The system does not implement distributed transactions or automatic crash-window reconciliation.

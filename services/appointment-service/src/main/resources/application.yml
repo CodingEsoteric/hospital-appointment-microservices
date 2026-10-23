@@ -6,6 +6,8 @@ spring:
   datasource:
     url: ${APPOINTMENT_DATABASE_URL:jdbc:sqlite:./appointment-service.db}
     driver-class-name: org.sqlite.JDBC
+    hikari:
+      connection-init-sql: "PRAGMA busy_timeout=5000"
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
@@ -17,3 +19,10 @@ appointment:
     availability-url: ${AVAILABILITY_SERVICE_URL:http://localhost:8083}
     notification-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
     notification-path: ${NOTIFICATION_SEND_PATH:/api/notifications}
+    connect-timeout: ${DOWNSTREAM_CONNECT_TIMEOUT:2s}
+    response-timeout: ${DOWNSTREAM_RESPONSE_TIMEOUT:3s}
+    notification-retry:
+      max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
+      initial-delay: ${NOTIFICATION_RETRY_INITIAL_DELAY:100ms}
+      max-delay: ${NOTIFICATION_RETRY_MAX_DELAY:2s}
+      jitter-cap: ${NOTIFICATION_RETRY_JITTER_CAP:100ms}

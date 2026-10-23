@@ -1,22 +1,25 @@
-# Data Ownership — One SQLite Database Per Service
+# Implemented Data Ownership
 
-No service may open or query another service's database. Cross-service references are opaque IDs only; do not create cross-service foreign keys.
+Each service owns one local SQLite database. Cross-service IDs are scalar values; there are no cross-service database foreign keys or direct reads of another service's file. Default SQLite JDBC URLs are relative to each process working directory. Set the corresponding `*_DATABASE_URL` variable to choose another path. Hibernate creates/updates tables on startup; Appointment, Availability, and Notification also initialize their unique indexes at startup.
 
-## Patient Service — `patients.db`
-`patients(id TEXT PRIMARY KEY, name TEXT NOT NULL, active INTEGER NOT NULL)`
+## Patient Service — `patient-service.db`
 
-## Availability Service — `availability.db`
-`doctors(id TEXT PRIMARY KEY, name TEXT NOT NULL, specialty TEXT NOT NULL, active INTEGER NOT NULL)`
-`slots(id TEXT PRIMARY KEY, doctor_id TEXT NOT NULL, start_time TEXT NOT NULL, capacity INTEGER NOT NULL, reserved_count INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL)`
-Optional: `reservations(id TEXT PRIMARY KEY, slot_id TEXT NOT NULL, appointment_id TEXT NOT NULL, status TEXT NOT NULL)`.
+Table `patients`: generated numeric `id`, `name`, unique `email`, and boolean `active`. `Patient` owns this data. Appointment reads eligibility through Patient Service HTTP.
 
-An atomic conditional update should increment reserved count only when the slot is available and `reserved_count < capacity`. Check the affected row count.
+## Availability Service — `availability-service.db`
 
-## Appointment Service — `appointments.db`
-`appointments(id TEXT PRIMARY KEY, patient_id TEXT NOT NULL, doctor_id TEXT NOT NULL, slot_id TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, correlation_id TEXT)`
-`idempotency_records(key TEXT PRIMARY KEY, request_fingerprint TEXT NOT NULL, state TEXT NOT NULL, http_status INTEGER, response_json TEXT, appointment_id TEXT, created_at TEXT NOT NULL)`
+- `doctors`: numeric ID, `name`, `specialty`.
+- `appointment_slots`: numeric ID, `doctor_id` (Availability-owned doctor relation), `starts_at`, `ends_at`, `capacity`, `reserved_count`.
+- `slot_reservations`: string UUID ID, `slot_id`, `released`, `created_at`.
 
-## Notification Service — `notifications.db`
-`notifications(id TEXT PRIMARY KEY, appointment_id TEXT NOT NULL, channel TEXT NOT NULL, status TEXT NOT NULL, attempt_count INTEGER NOT NULL, last_error TEXT, created_at TEXT NOT NULL)`
+`reserveIfAvailable` performs the conditional update against `capacity`; it does not load another service's data. SQLite busy timeout is configured to 5000 ms.
 
-These are logical schema suggestions, not implemented tables. Adjust them to match the final code and report.
+## Appointment Service — `appointment-service.db`
+
+Table `appointments`: generated numeric ID, `patient_id`, `slot_id`, `reservation_id`, unique `idempotency_key`, nullable `request_fingerprint` (SHA-256 of canonical `booking-v1` request fields), `notification_status`, `notification_attempts`, and `created_at`. The unique idempotency index is installed by `IdempotencyConstraintInitializer`. Patient, slot, and reservation IDs are scalar references; this service does not query their databases directly.
+
+There is no appointment lifecycle status or cancellation state stored in the current model.
+
+## Notification Service — `notification-service.db`
+
+Table `notification_events`: string `notification_id`, unique numeric `appointment_id`, numeric `patient_id` and `slot_id`, string `reservation_id`, `created_at`, `event_status`, and `accepted_at`. The unique appointment index is installed by `NotificationConstraintInitializer`. These are Notification-owned simulated acceptance records, not proof of external email/SMS delivery.
