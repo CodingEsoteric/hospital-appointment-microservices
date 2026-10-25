@@ -1,0 +1,56 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: availability-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: availability-service
+  template:
+    metadata:
+      labels:
+        app: availability-service
+    spec:
+      containers:
+        - name: availability-service
+          image: hospital-appointment-microservices-availability-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SERVER_PORT
+              value: "8083"
+            - name: AVAILABILITY_DATABASE_URL
+              value: "jdbc:sqlite:/data/availability-service.db"
+          volumeMounts:
+            - name: availability-data
+              mountPath: /data
+      volumes:
+        - name: availability-data
+          persistentVolumeClaim:
+            claimName: availability-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: availability-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: availability-service
+spec:
+  selector:
+    app: availability-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+  type: ClusterIP

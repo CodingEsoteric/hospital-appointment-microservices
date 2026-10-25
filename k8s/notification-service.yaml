@@ -1,0 +1,56 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: hospital-appointment-microservices-notification-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SERVER_PORT
+              value: "8084"
+            - name: NOTIFICATION_DATABASE_URL
+              value: "jdbc:sqlite:/data/notification-service.db"
+          volumeMounts:
+            - name: notification-data
+              mountPath: /data
+      volumes:
+        - name: notification-data
+          persistentVolumeClaim:
+            claimName: notification-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: notification-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - port: 8084
+      targetPort: 8084
+  type: ClusterIP

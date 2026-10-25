@@ -1,0 +1,80 @@
+
+services:
+  patient-service:
+    build:
+      context: ./services/patient-service
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      PATIENT_DATABASE_URL: jdbc:sqlite:/data/patient-service.db
+    volumes:
+      - patient-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8082'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  availability-service:
+    build:
+      context: ./services/availability-service
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: 8083
+      AVAILABILITY_DATABASE_URL: jdbc:sqlite:/data/availability-service.db
+    volumes:
+      - availability-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8083'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SERVER_PORT: 8084
+      NOTIFICATION_DATABASE_URL: jdbc:sqlite:/data/notification-service.db
+    volumes:
+      - notification-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8084'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  appointment-service:
+    build:
+      context: ./services/appointment-service
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      APPOINTMENT_DATABASE_URL: jdbc:sqlite:/data/appointment-service.db
+      PATIENT_SERVICE_URL: http://patient-service:8082
+      AVAILABILITY_SERVICE_URL: http://availability-service:8083
+      NOTIFICATION_SERVICE_URL: http://notification-service:8084
+      NOTIFICATION_SEND_PATH: /api/notifications
+    volumes:
+      - appointment-data:/data
+    depends_on:
+      patient-service:
+        condition: service_healthy
+      availability-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+
+volumes:
+  patient-data:
+  availability-data:
+  notification-data:
+  appointment-data:

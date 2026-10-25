@@ -4,6 +4,7 @@ import edu.assignment.appointment.dto.BookingRequest;
 import edu.assignment.appointment.model.Appointment;
 import edu.assignment.appointment.repository.AppointmentRepository;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 
 @Service
 public class BookingService {
@@ -13,6 +14,7 @@ public class BookingService {
     public BookingService(AppointmentRepository appointments, DownstreamClients clients) {
         this.appointments=appointments; this.clients=clients; for(int i=0;i<locks.length;i++) locks[i]=new Object();
     }
+    public Optional<Appointment> findById(Long id) { return appointments.findById(id); }
     public Result book(String key, BookingRequest request) {
         String requestFingerprint = BookingRequestFingerprint.of(request);
         synchronized (locks[(key.hashCode() & 0x7fffffff) % locks.length]) {

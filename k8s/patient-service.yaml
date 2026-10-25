@@ -1,0 +1,56 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: patient-service
+  template:
+    metadata:
+      labels:
+        app: patient-service
+    spec:
+      containers:
+        - name: patient-service
+          image: hospital-appointment-microservices-patient-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SERVER_PORT
+              value: "8082"
+            - name: PATIENT_DATABASE_URL
+              value: "jdbc:sqlite:/data/patient-service.db"
+          volumeMounts:
+            - name: patient-data
+              mountPath: /data
+      volumes:
+        - name: patient-data
+          persistentVolumeClaim:
+            claimName: patient-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: patient-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-service
+spec:
+  selector:
+    app: patient-service
+  ports:
+    - port: 8082
+      targetPort: 8082
+  type: ClusterIP
