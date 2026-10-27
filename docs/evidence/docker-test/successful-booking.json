@@ -1,0 +1,9 @@
+{
+    "id":  2,
+    "patientId":  2,
+    "slotId":  2,
+    "reservationId":  "52fa9463-0338-4b55-99a0-8b0cc9d6b530",
+    "createdAt":  "2026-10-27T19:15:53.597344726Z",
+    "notificationStatus":  "SENT",
+    "notificationAttempts":  1
+}

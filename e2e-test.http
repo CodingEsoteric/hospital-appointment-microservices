@@ -17,12 +17,12 @@ POST http://localhost:8082/api/patients
 Content-Type: application/json
 
 {
-  "name": "E2E Test Patient",
-  "email": "e2e.patient@example.com"
+  "name": "Test 3 Patient",
+  "email": "e2e3.patient@example.com"
 }
 
 ### get eligibility
-GET http://localhost:8082/api/patients/1/eligibility
+GET http://localhost:8082/api/patients/4/eligibility
 
 
 ### Create a doctor
@@ -30,7 +30,7 @@ POST http://localhost:8083/api/v1/doctors
 Content-Type: application/json
 
 {
-  "name": "Dr. E2E Test",
+  "name": "Dr. E2E Test 2",
   "specialty": "General Medicine"
 }
 
@@ -40,21 +40,21 @@ POST http://localhost:8083/api/v1/slots
 Content-Type: application/json
 
 {
-  "doctorId": 1,
+  "doctorId": 3,
   "startsAt": "2027-01-15T09:00:00Z",
   "endsAt": "2027-01-15T09:30:00Z",
-  "capacity": 1
+  "capacity": 5
 }
 
 
 ### Book an appointment
 POST http://localhost:8081/api/appointments
 Content-Type: application/json
-Idempotency-Key: e2e-booking-001
+Idempotency-Key: e2e-booking-003
 
 {
-  "patientId": 1,
-  "slotId": 2
+  "patientId": 4,
+  "slotId": 3
 }
 
 ### Replay the same booking — same key and same body

@@ -1,0 +1,14 @@
+[PASS] appointment health endpoint
+[PASS] notification health endpoint
+[PASS] availability health endpoint
+[PASS] patient health endpoint
+[PASS] Create test patient
+[PASS] Create test doctor
+[PASS] Create appointment slot
+[PASS] Booking request returns HTTP 201 Created
+[PASS] Booking response contains a valid appointment ID
+[PASS] Booking notification status is SENT
+[PASS] Idempotent replay returns HTTP 200 OK
+[PASS] Idempotent replay returns same appointment
+[PASS] Same key with different payload returns HTTP 409
+[SUMMARY] PASS: 13 passed; 0 failed.

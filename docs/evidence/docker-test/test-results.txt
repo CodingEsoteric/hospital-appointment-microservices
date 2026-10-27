@@ -1,0 +1,10 @@
+[PASS] appointment health endpoint
+[PASS] availability health endpoint
+[PASS] patient health endpoint
+[PASS] Create patient (ID 2)
+[PASS] Create doctor (ID 2)
+[PASS] Create slot (ID 2)
+[PASS] Booking created (appointment ID 2)
+[PASS] Notification sent
+[PASS] Idempotent replay returns same appointment
+[PASS] Same key with different payload returns HTTP 409
