@@ -1,0 +1,207 @@
+﻿Task 1 Docker evidence captured: 2026-10-28 22:58:46 +03:00
+Repository: C:\Users\HP\IdeaProjects\hospital-appointment-microservices
+No environment variables or secret values are recorded.
+
+===== IMAGE BUILD OUTPUT (docker compose build) =====
+Command: compose build
+ Image hospital-appointment-microservices-patient-service Building 
+ Image hospital-appointment-microservices-availability-service Building 
+ Image hospital-appointment-microservices-notification-service Building 
+ Image hospital-appointment-microservices-appointment-service Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 2.71kB done
+#1 DONE 0.0s
+
+#2 [notification-service internal] load build definition from Dockerfile
+#2 transferring dockerfile: 211B 0.0s done
+#2 DONE 0.1s
+
+#3 [patient-service internal] load build definition from Dockerfile
+#3 transferring dockerfile: 206B done
+#3 DONE 0.1s
+
+#4 [availability-service internal] load build definition from Dockerfile
+#4 transferring dockerfile: 211B done
+#4 DONE 0.1s
+
+#5 [appointment-service internal] load build definition from Dockerfile
+#5 transferring dockerfile: 210B done
+#5 DONE 0.1s
+
+#6 [patient-service internal] load metadata for docker.io/library/eclipse-temurin:21-jre
+#6 ...
+
+#7 [auth] library/eclipse-temurin:pull token for registry-1.docker.io
+#7 DONE 0.0s
+
+#6 [appointment-service internal] load metadata for docker.io/library/eclipse-temurin:21-jre
+#6 DONE 2.0s
+
+#8 [availability-service internal] load .dockerignore
+#8 transferring context: 2B done
+#8 DONE 0.0s
+
+#9 [patient-service internal] load .dockerignore
+#9 transferring context: 2B done
+#9 DONE 0.1s
+
+#10 [appointment-service internal] load .dockerignore
+#10 transferring context: 2B done
+#10 DONE 0.1s
+
+#11 [notification-service internal] load .dockerignore
+#11 transferring context: 2B done
+#11 DONE 0.1s
+
+#12 [appointment-service internal] load build context
+#12 DONE 0.0s
+
+#13 [appointment-service 1/3] FROM docker.io/library/eclipse-temurin:21-jre@sha256:f37956012e0cb88400e5b3689aeae2d2d735364c1922ae2225536163b5a99f56
+#13 resolve docker.io/library/eclipse-temurin:21-jre@sha256:f37956012e0cb88400e5b3689aeae2d2d735364c1922ae2225536163b5a99f56
+#13 ...
+
+#14 [availability-service internal] load build context
+#14 transferring context: 101B done
+#14 DONE 0.1s
+
+#15 [patient-service internal] load build context
+#15 transferring context: 96B done
+#15 DONE 0.1s
+
+#12 [appointment-service internal] load build context
+#12 transferring context: 100B done
+#12 DONE 0.1s
+
+#16 [notification-service internal] load build context
+#16 transferring context: 101B done
+#16 DONE 0.1s
+
+#13 [patient-service 1/3] FROM docker.io/library/eclipse-temurin:21-jre@sha256:f37956012e0cb88400e5b3689aeae2d2d735364c1922ae2225536163b5a99f56
+#13 resolve docker.io/library/eclipse-temurin:21-jre@sha256:f37956012e0cb88400e5b3689aeae2d2d735364c1922ae2225536163b5a99f56 0.1s done
+#13 DONE 0.2s
+
+#17 [availability-service 2/3] WORKDIR /app
+#17 DONE 0.1s
+
+#18 [appointment-service 3/3] COPY target/appointment-service-0.1.0-SNAPSHOT-exec.jar app.jar
+#18 DONE 0.4s
+
+#19 [patient-service 3/3] COPY target/patient-service-0.1.0-SNAPSHOT-exec.jar app.jar
+#19 DONE 0.4s
+
+#20 [notification-service 3/3] COPY target/notification-service-0.1.0-SNAPSHOT-exec.jar app.jar
+#20 DONE 0.4s
+
+#21 [availability-service 3/3] COPY target/availability-service-0.1.0-SNAPSHOT-exec.jar app.jar
+#21 DONE 0.4s
+
+#22 [availability-service] exporting to image
+#22 exporting layers
+#22 exporting layers 2.7s done
+#22 exporting manifest sha256:cb76d4574d4d1a8975af8d9814f8ace91634c714ceaa14d675f86785363e64e7
+#22 exporting manifest sha256:cb76d4574d4d1a8975af8d9814f8ace91634c714ceaa14d675f86785363e64e7 0.2s done
+#22 exporting config sha256:a24763e1fec4a8d8a57d27131f50b55c01e1fedf782251b40dd55dac176f60bf
+#22 exporting config sha256:a24763e1fec4a8d8a57d27131f50b55c01e1fedf782251b40dd55dac176f60bf 0.1s done
+#22 exporting attestation manifest sha256:61d02d00c041b23b2ab189cfe5033dc864a7688f0eacd2b728bad02b4583ff85
+#22 exporting attestation manifest sha256:61d02d00c041b23b2ab189cfe5033dc864a7688f0eacd2b728bad02b4583ff85 0.1s done
+#22 exporting manifest list sha256:4259795482d6e75737c5aa08920122114b732bb6cdf4b5e68496883497705e72
+#22 exporting manifest list sha256:4259795482d6e75737c5aa08920122114b732bb6cdf4b5e68496883497705e72 0.1s done
+#22 naming to docker.io/library/hospital-appointment-microservices-availability-service:latest 0.0s done
+#22 unpacking to docker.io/library/hospital-appointment-microservices-availability-service:latest
+#22 unpacking to docker.io/library/hospital-appointment-microservices-availability-service:latest 0.5s done
+#22 DONE 3.8s
+
+#23 [appointment-service] exporting to image
+#23 exporting layers 2.8s done
+#23 exporting manifest sha256:2c7944a3ee22326d14ff7f610d819baf1dfb6c41e3a55925cac511f43385ff42 0.1s done
+#23 exporting config sha256:3f4609d475af7d18bcab83ec63ca42855a9d827c0f3436f3aaecb68fc8411eb6 0.1s done
+#23 exporting attestation manifest sha256:7edf5ba393761734ba6fe96e7194cbe89939863802e80d7092d0fd4ffdfb6ee1 0.1s done
+#23 exporting manifest list sha256:3064031010feafc5f506c0f88199f7b8c49cdf0003cf5f6c1d8fcff3e9ae485e 0.1s done
+#23 naming to docker.io/library/hospital-appointment-microservices-appointment-service:latest 0.0s done
+#23 unpacking to docker.io/library/hospital-appointment-microservices-appointment-service:latest 0.4s done
+#23 DONE 3.8s
+
+#24 [patient-service] exporting to image
+#24 exporting layers 2.6s done
+#24 exporting manifest sha256:71741940f50d21ea560d6baf1b05a20649d4515002217ca3239c6c37b82747a4 0.1s done
+#24 exporting config sha256:e040975bc1f6798475cfd087615aafd35fbfde69c35c57bd28fb704d6ae8da12 0.1s done
+#24 exporting attestation manifest sha256:d2dd1d376a1b24244c51f11e7ece675b952e18cb8da35ca5400cf3f11d675346 0.2s done
+#24 exporting manifest list sha256:c91625fdc171b29d94371b306b15a93b8ea32ac86d7ef66ffb33b32a2a200a45 0.1s done
+#24 naming to docker.io/library/hospital-appointment-microservices-patient-service:latest 0.0s done
+#24 unpacking to docker.io/library/hospital-appointment-microservices-patient-service:latest 0.6s done
+#24 DONE 3.8s
+
+#25 [notification-service] exporting to image
+#25 exporting layers 2.7s done
+#25 exporting manifest sha256:86002a750996730e4fbec8eff2108ead6f51f911d09532fb29c68818cb200aa7 0.1s done
+#25 exporting config sha256:196a8790aae979515909f4c3c37da9943e50b523b778cd6dff988f823c407519 0.1s done
+#25 exporting attestation manifest sha256:a591b7c2ec103b181ccf18df6b23924c4246db3e7f5b225717080035abb3bba5 0.1s done
+#25 exporting manifest list sha256:3718c546c601fe99e6b54c8869e15945b88f14a36c55a3bca50af88c48db8b6a 0.1s done
+#25 naming to docker.io/library/hospital-appointment-microservices-notification-service:latest 0.0s done
+#25 unpacking to docker.io/library/hospital-appointment-microservices-notification-service:latest 0.5s done
+#25 DONE 3.8s
+
+#26 [appointment-service] resolving provenance for metadata file
+#26 DONE 0.3s
+
+#27 [patient-service] resolving provenance for metadata file
+#27 DONE 0.2s
+
+#28 [availability-service] resolving provenance for metadata file
+#28 DONE 0.1s
+
+#29 [notification-service] resolving provenance for metadata file
+#29 DONE 0.0s
+ Image hospital-appointment-microservices-appointment-service Built 
+ Image hospital-appointment-microservices-availability-service Built 
+ Image hospital-appointment-microservices-notification-service Built 
+ Image hospital-appointment-microservices-patient-service Built 
+Exit code: 0
+
+===== CONTAINER STARTUP OUTPUT (docker compose up -d) =====
+Command: compose up -d
+ Container hospital-appointment-microservices-availability-service-1 Recreate 
+ Container hospital-appointment-microservices-patient-service-1 Recreate 
+ Container hospital-appointment-microservices-notification-service-1 Recreate 
+ Container hospital-appointment-microservices-patient-service-1 Recreated 
+ Container hospital-appointment-microservices-notification-service-1 Recreated 
+ Container hospital-appointment-microservices-availability-service-1 Recreated 
+ Container hospital-appointment-microservices-appointment-service-1 Recreate 
+ Container hospital-appointment-microservices-appointment-service-1 Recreated 
+ Container hospital-appointment-microservices-notification-service-1 Starting 
+ Container hospital-appointment-microservices-availability-service-1 Starting 
+ Container hospital-appointment-microservices-patient-service-1 Starting 
+ Container hospital-appointment-microservices-notification-service-1 Started 
+ Container hospital-appointment-microservices-availability-service-1 Started 
+ Container hospital-appointment-microservices-patient-service-1 Started 
+ Container hospital-appointment-microservices-availability-service-1 Waiting 
+ Container hospital-appointment-microservices-notification-service-1 Waiting 
+ Container hospital-appointment-microservices-patient-service-1 Waiting 
+ Container hospital-appointment-microservices-availability-service-1 Healthy 
+ Container hospital-appointment-microservices-notification-service-1 Healthy 
+ Container hospital-appointment-microservices-patient-service-1 Healthy 
+ Container hospital-appointment-microservices-appointment-service-1 Starting 
+ Container hospital-appointment-microservices-appointment-service-1 Started 
+Exit code: 0
+
+===== CONTAINER STATUS (docker compose ps) =====
+Command: compose ps
+NAME                                                        IMAGE                                                     COMMAND               SERVICE                CREATED          STATUS                    PORTS
+hospital-appointment-microservices-appointment-service-1    hospital-appointment-microservices-appointment-service    "java -jar app.jar"   appointment-service    12 seconds ago   Up Less than a second     0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp
+hospital-appointment-microservices-availability-service-1   hospital-appointment-microservices-availability-service   "java -jar app.jar"   availability-service   12 seconds ago   Up 11 seconds (healthy)   0.0.0.0:8083->8083/tcp, [::]:8083->8083/tcp
+hospital-appointment-microservices-notification-service-1   hospital-appointment-microservices-notification-service   "java -jar app.jar"   notification-service   12 seconds ago   Up 11 seconds (healthy)   0.0.0.0:8084->8084/tcp, [::]:8084->8084/tcp
+hospital-appointment-microservices-patient-service-1        hospital-appointment-microservices-patient-service        "java -jar app.jar"   patient-service        12 seconds ago   Up 11 seconds (healthy)   0.0.0.0:8082->8082/tcp, [::]:8082->8082/tcp
+Exit code: 0
+
+===== DOCKER IMAGE LIST (docker image ls) =====
+Command: image ls
+IMAGE                                                                                                 ID             DISK USAGE   CONTENT SIZE   EXTRA
+gcr.io/k8s-minikube/kicbase:v0.0.51                                                                   146cd636030e       1.89GB          532MB        
+gcr.io/k8s-minikube/kicbase@sha256:4a1c825b61479e6c898851ea66f13c620aaeab6002746e95067fc2c4b38a0b24   4a1c825b6147       1.89GB          532MB   U    
+hospital-appointment-microservices-appointment-service:latest                                         3064031010fe        594MB          181MB   U    
+hospital-appointment-microservices-availability-service:latest                                        4259795482d6        594MB          181MB   U    
+hospital-appointment-microservices-notification-service:latest                                        3718c546c601        594MB          181MB   U    
+hospital-appointment-microservices-patient-service:latest                                             c91625fdc171        594MB          181MB   U    
+kong:3.9                                                                                              aa4a4687b133        534MB          126MB   U    
+Exit code: 0
+

@@ -172,7 +172,7 @@ Run the scripts from the repository root in PowerShell:
 .\scripts\test-docker-persistence.ps1
 ```
 
-The Compose end-to-end script saves its checks and successful booking response under `docs/evidence/docker-test/`. The persistence script prints its result to the console and has no saved run output in the repository.
+The Compose end-to-end script saves its checks and successful booking response under `docs/evidence/docker-test/`. Screenshot evidence page 4 captures the persistence script passing after replay across a Compose restart, with matching appointment and reservation IDs; no separate text log is saved.
 
 ### 5. Kubernetes Deployment with Minikube
 
@@ -231,7 +231,7 @@ Run the Kubernetes end-to-end test script:
 
 The script starts temporary local port forwards, checks the four application health endpoints, creates test data, submits an appointment booking, validates notification processing, verifies idempotent replay, and checks that reuse of the same idempotency key with a different payload returns HTTP 409.
 
-The script writes its pass/fail summary to `docs/evidence/kubernetes-test/test-results.txt`; temporary port-forward logs are saved under `docs/evidence/test-logs/`.
+The current script writes its 13-pass, 0-fail summary to `docs/evidence/kubernetes-test/test-results.txt`; temporary port-forward logs are saved under `docs/evidence/test-logs/`. Screenshot evidence page 6 captures an earlier nine-check run, not the current result file.
 
 ### 7. Scaling and Self-Healing
 
@@ -259,11 +259,11 @@ kubectl scale deployment/patient-service --replicas=1
 kubectl rollout status deployment/patient-service
 ```
 
-Patient Service replica scaling was verified at 2/2 and then restored to 1/1; the command output is saved in `docs/evidence/kubernetes-test/scaling-results.txt`. No saved evidence currently demonstrates Pod deletion and replacement, so self-healing is a reproduction procedure rather than a claimed completed result. Scaling is a local replica-management demonstration, not a production-capacity or high-availability benchmark. Each service has its own SQLite database and PVC; scaling a service does not demonstrate production-safe concurrent SQLite access.
+Patient Service replica scaling was verified at 2/2 and then restored to 1/1; the command output is saved in `docs/evidence/kubernetes-test/scaling-results.txt`, and screenshot evidence page 8 shows two Running Patient Service pods. Screenshot evidence page 7 shows a deleted Patient Service Pod replaced by a Running Pod, demonstrating self-healing. Scaling is a local replica-management demonstration, not a production-capacity or high-availability benchmark. Each service has its own SQLite database and PVC; scaling a service does not demonstrate production-safe concurrent SQLite access.
 
 ### 8. Troubleshooting and Validation
 
-Each service POM configures the Spring Boot `repackage` goal with the `exec` classifier. This keeps the ordinary JAR available for Maven module dependencies and creates a separate executable `*-exec.jar` for each Dockerfile. Original packaging error logs are not part of the repository, so this section describes the verified configuration rather than claiming a specific historical error transcript.
+Each service POM configures the Spring Boot `repackage` goal with the `exec` classifier. This keeps the ordinary JAR available for Maven module dependencies and creates a separate executable `*-exec.jar` for each Dockerfile. Screenshot evidence page 9 shows `mvn clean package` completing successfully. It verifies the successful build, not the original packaging failure; original error logs are not included.
 
 Build the executable JARs required by the Dockerfiles with:
 
@@ -271,12 +271,12 @@ Build the executable JARs required by the Dockerfiles with:
 mvn clean package
 ```
 
-The saved Docker Compose result contains 10 passing checks and the saved Kubernetes result contains 13 passed with 0 failed. The persistence script is present, but no saved output from a persistence run is available. Replica scaling evidence is saved as described above; Pod replacement evidence is not present.
+The saved Docker Compose result contains 10 passing checks and the saved Kubernetes result contains 13 passed with 0 failed. Persistence, self-healing, and scaling are also documented in the screenshot evidence; the screenshot Kubernetes run on page 6 is an earlier nine-check version. No original Maven packaging error log is included.
 
 ### 9. Evidence and Supporting Documentation
 
 - **Assignment 1 evidence:** `evidence/` — concurrency, idempotency, resilience, notification persistence, and submission audit results.
-- **Assignment 2 evidence:** `docs/evidence/docker-test/` — Docker test results and successful booking response; `docs/evidence/kubernetes-test/` — Kubernetes test summary and replica scaling output; `docs/evidence/test-logs/` — port-forward logs. `docs/evidence/Assignment2_Screenshot_Evidence.docx` is a checklist for screenshots, not a set of captured images.
+- **Assignment 2 evidence:** `docs/evidence/docker-test/` — Docker test results and successful booking response; `docs/evidence/kubernetes-test/` — current Kubernetes test summary and replica scaling output; `docs/evidence/test-logs/` — port-forward logs. `docs/evidence/Assignment2_Screenshot_Evidence.docx` contains captured evidence on pages 1–9: Compose status/booking/idempotency/persistence (1–4), Kubernetes resources and an earlier end-to-end run (5–6), self-healing (7), scaling (8), and successful Maven packaging (9).
 - **Architecture and design:** `docs/architecture.mmd`, `docs/sequence-booking.mmd`, and `docs/data-ownership.md`.
 - **API contracts:** `docs/api-contracts.md`.
 - **Business rules:** `docs/business-rules.md`.

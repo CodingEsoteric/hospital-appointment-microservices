@@ -1,0 +1,32 @@
+flowchart TB
+  subgraph APP[Application communication — verified REST over HTTP]
+    C[Client] -->|HTTP API requests :8081| A[Appointment Service]
+    A -->|HTTP REST :8082| P[Patient Service]
+    A -->|HTTP REST :8083| V[Availability Service]
+    A -->|HTTP POST /api/notifications :8084| N[Notification Service<br/>simulates acceptance; no email or SMS delivery]
+  end
+
+  subgraph COMPOSE[Alternative 1 — Local Docker Compose deployment]
+    direction TB
+    CB[Four Docker images<br/>built from service Dockerfiles] --> CC[Four service containers<br/>Appointment :8081 · Patient :8082<br/>Availability :8083 · Notification :8084]
+    CC --> CV[Named volumes mounted at /data<br/>appointment-data · patient-data<br/>availability-data · notification-data]
+    CV --> CD[(Four independent SQLite files<br/>one database owned by each service)]
+  end
+
+  subgraph KUBE[Alternative 2 — Kubernetes on Minikube]
+    direction TB
+    KB[Four prebuilt images<br/>loaded into Minikube] --> KD[Four Deployments<br/>one replica each in manifests]
+    KD --> KS[Kubernetes Services<br/>Appointment NodePort<br/>other services ClusterIP]
+    KD --> KP[Four PVCs, each requesting 1 GiB<br/>mounted at /data in its service Pod]
+    KP --> KDB[(Four independent SQLite files<br/>one database owned by each service)]
+  end
+
+  APP -. same service design, deployed separately .-> COMPOSE
+  APP -. same service design, deployed separately .-> KUBE
+
+  classDef app fill:#eaf2ff,stroke:#2457a6,color:#102a43,stroke-width:1.5px;
+  classDef deploy fill:#eff8f3,stroke:#238052,color:#123b2b,stroke-width:1.5px;
+  classDef storage fill:#fff5e7,stroke:#bd6b00,color:#513000,stroke-width:1.5px;
+  class C,A,P,V,N app;
+  class CB,CC,KB,KD,KS deploy;
+  class CV,CD,KP,KDB storage;

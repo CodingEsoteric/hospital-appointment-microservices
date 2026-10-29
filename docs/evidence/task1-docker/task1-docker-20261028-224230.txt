@@ -1,0 +1,4 @@
+﻿Task 1 Docker evidence captured: 2026-10-28 22:42:30 +03:00
+Repository: C:\Users\HP\IdeaProjects\hospital-appointment-microservices
+No environment variables or secret values are recorded.
+
